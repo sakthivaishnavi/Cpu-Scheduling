@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Priority Scheduling</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+  }
+  .container {
+    text-align: center;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+  h1 {
+    margin-bottom: 20px;
+  }
+  button {
+    padding: 10px 20px;
+    margin: 5px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  button:hover {
+    background-color: #0056b3;
+  }
+  #result, #inputForm, #processesTable {
+    margin-top: 20px;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 20px;
+  }
+  th, td {
+    border: 1px solid #dddddd;
+    text-align: center;
+    padding: 8px;
+  }
+  th {
+    background-color: #f2f2f2;
+  }
+  label, input {
+    display: block;
+    margin: 10px 0;
+  }
+  input {
+    padding: 5px;
+    width: calc(100% - 12px);
+    box-sizing: border-box;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Priority Scheduling</h1>
+  <button onclick="location.href='index.html'">Back to Home</button>
+  <div id="inputForm">
+    <h2>Add Process</h2>
+    <label for="arrivalTime">Arrival Time:</label>
+    <input type="number" id="arrivalTime">
+    <label for="burstTime">Burst Time:</label>
+    <input type="number" id="burstTime">
+    <label for="priority">Priority:</label>
+    <input type="number" id="priority">
+    <button onclick="addProcess()">Add Process</button>
+  </div>
+  <table id="processesTable">
+    <tr>
+      <th>Process</th>
+      <th>Arrival Time</th>
+      <th>Burst Time</th>
+      <th>Priority</th>
+    </tr>
+  </table>
+  <div id="result"></div>
+  <button onclick="priorityScheduling()">Calculate</button>
+</div>
+
+<script>
+  let processes = [];
+
+  function addProcess() {
+    let arrivalTime = parseInt(document.getElementById('arrivalTime').value);
+    let burstTime = parseInt(document.getElementById('burstTime').value);
+    let priority = parseInt(document.getElementById('priority').value);
+    if (!isNaN(arrivalTime) && !isNaN(burstTime) && !isNaN(priority)) {
+      processes.push({ arrivalTime, burstTime, priority });
+      updateProcessesTable();
+      document.getElementById('arrivalTime').value = '';
+      document.getElementById('burstTime').value = '';
+      document.getElementById('priority').value = '';
+    }
+  }
+
+  function updateProcessesTable() {
+    let table = document.getElementById('processesTable');
+    table.innerHTML = `
+      <tr>
+        <th>Process</th>
+        <th>Arrival Time</th>
+        <th>Burst Time</th>
+        <th>Priority</th>
+      </tr>`;
+    for (let i = 0; i < processes.length; i++) {
+      let row = table.insertRow();
+      row.insertCell().innerText = `P${i + 1}`;
+      row.insertCell().innerText = processes[i].arrivalTime;
+      row.insertCell().innerText = processes[i].burstTime;
+      row.insertCell().innerText = processes[i].priority;
+    }
+  }
+
+  function priorityScheduling() {
+    let resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = "<h2>Priority Scheduling</h2>";
+    processes.sort((a, b) => a.priority - b.priority || a.arrivalTime - b.arrivalTime);
+    let completionTimes = [];
+    let turnaroundTimes = [];
+    let waitingTimes = [];
+    let totalWaitingTime = 0;
+    let currentTime = 0;
+
+    processes.forEach((process, index) => {
+      currentTime += process.burstTime;
+      completionTimes.push(currentTime);
+      turnaroundTimes.push(currentTime - process.arrivalTime);
+      waitingTimes.push(turnaroundTimes[index] - process.burstTime);
+      totalWaitingTime += waitingTimes[index];
+    });
+
+    let avgWaitingTime = totalWaitingTime / processes.length;
+    let avgTurnaroundTime = turnaroundTimes.reduce((acc, val) => acc + val, 0) / processes.length;
+
+    displayResults(completionTimes, turnaroundTimes, waitingTimes, avgWaitingTime, avgTurnaroundTime);
+  }
+
+  function displayResults(completionTimes, turnaroundTimes, waitingTimes, avgWaitingTime, avgTurnaroundTime) {
+    let table = document.createElement('table');
+    table.innerHTML = `
+      <tr>
+        <th>Process</th>
+        <th>Completion Time</th>
+        <th>Turnaround Time</th>
+        <th>Waiting Time</th>
+      </tr>`;
+    processes.forEach((_, index) => {
+      let row = table.insertRow();
+      row.insertCell().innerText = `P${index + 1}`;
+      row.insertCell().innerText = completionTimes[index];
+      row.insertCell().innerText = turnaroundTimes[index];
+      row.insertCell().innerText = waitingTimes[index];
+    });
+    let resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = '';
+    resultDiv.appendChild(table);
+    resultDiv.insertAdjacentHTML('beforeend', `<p>Average Waiting Time: ${avgWaitingTime.toFixed(2)}</p>`);
+    resultDiv.insertAdjacentHTML('beforeend', `<p>Average Turnaround Time: ${avgTurnaroundTime.toFixed(2)}</p>`);
+  }
+</script>
+</body>
+</html>
